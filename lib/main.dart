@@ -30,6 +30,7 @@ class LoginPage extends StatefulWidget {
 
 class LoginPageState extends State<LoginPage> {
   final usernameController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -38,30 +39,39 @@ class LoginPageState extends State<LoginPage> {
         title: const Text('Login'),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            TextField(
-              controller: usernameController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Username',
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              TextFormField(
+                controller: usernameController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Username',
+                ),
+                onFieldSubmitted: (_) {
+                  _login(context);
+                },
               ),
-            ),
-            ElevatedButton(
-              child: const Text('Login'),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          HomePage(username: usernameController.text)),
-                );
-              },
-            ),
-          ],
+              ElevatedButton(
+                child: const Text('Login'),
+                onPressed: () {
+                  _login(context);
+                },
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  void _login(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => HomePage(username: usernameController.text)),
     );
   }
 }
@@ -153,9 +163,8 @@ class HomePageState extends State<HomePage> {
             title: Text(lastMessage != null
                 ? '${lastMessage['username']}: ${lastMessage['text']}'
                 : 'No messages'),
-            subtitle: Text(lastMessage != null
-                ? 'Timestamp: ${lastMessage['timestamp']}'
-                : ''),
+            subtitle:
+                Text(lastMessage != null ? '${lastMessage['timestamp']}' : ''),
             onTap: () {
               // Navigate to the chatroom page
               Navigator.push(
@@ -274,7 +283,7 @@ class ChatRoomPageState extends State<ChatRoomPage> {
                         : ''),
                   ),
                   title: Text('${message['username']} : ${message['text']}'),
-                  subtitle: Text('Timestamp: ${message['timestamp']}'),
+                  subtitle: Text('${message['timestamp']}'),
                 );
               },
             ),
