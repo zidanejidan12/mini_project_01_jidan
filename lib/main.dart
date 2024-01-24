@@ -264,6 +264,25 @@ class ChatRoomPageState extends State<ChatRoomPage> {
       } else {
         throw Exception('Failed to send message');
       }
+    } else {
+      // handle the case when the message is empty
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Please enter a message.'),
+            actions: [
+              TextButton(
+                child: Text('OK'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
