@@ -44,15 +44,19 @@ class LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              TextFormField(
-                controller: usernameController,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Username',
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: TextFormField(
+                  controller: usernameController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Username',
+                    prefixIcon: Icon(Icons.person),
+                  ),
+                  onFieldSubmitted: (_) {
+                    _login(context);
+                  },
                 ),
-                onFieldSubmitted: (_) {
-                  _login(context);
-                },
               ),
               ElevatedButton(
                 child: const Text('Login'),
@@ -288,11 +292,14 @@ class ChatRoomPageState extends State<ChatRoomPage> {
               },
             ),
           ),
-          TextField(
-            controller: messageController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: 'Message',
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: messageController,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Message',
+              ),
             ),
           ),
           ElevatedButton(
