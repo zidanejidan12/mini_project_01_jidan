@@ -85,6 +85,8 @@ class HomePage extends StatefulWidget {
 
   const HomePage({Key? key, required this.username}) : super(key: key);
 
+  get roomId => null;
+
   @override
   HomePageState createState() => HomePageState();
 }
@@ -143,10 +145,75 @@ class HomePageState extends State<HomePage> {
     }
   }
 
+  _createNewRoom(String from, String to) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1:8080/api/room'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'id': widget.roomId,
+          'username': widget.username,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        if (data['data'] != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChatRoomPage(
+                roomId: data['data']['roomId'],
+                username: widget.username,
+              ),
+            ),
+          );
+        } else {
+          print('Response data is null');
+        }
+      } else {
+        print('Failed to create room. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('An error occurred: $e');
+    }
+  }
+
   @override
   // In HomePageState
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final TextEditingController _controller = TextEditingController();
+          return showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: Text('Enter username'),
+                content: TextField(
+                  controller: _controller,
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    child: Text('Send'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      _createNewRoom(
+                          widget.username,
+                          _controller
+                              .text); // ganti 'currentUser' dengan username pengguna saat ini
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        },
+        child: Icon(Icons.message),
+      ),
       appBar: AppBar(
         title: const Text('Chat'),
       ),
@@ -307,7 +374,7 @@ class ChatRoomPageState extends State<ChatRoomPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Room ${widget.roomId}'),
+        title: Text('Room ${widget.username}'),
       ),
       body: Column(
         children: <Widget>[
