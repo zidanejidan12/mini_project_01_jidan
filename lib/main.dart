@@ -148,7 +148,7 @@ class HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: const Text('Chat'),
       ),
       body: ListView.builder(
         itemCount: rooms.length,
@@ -164,21 +164,38 @@ class HomePageState extends State<HomePage> {
                   ? lastMessage['username'][0].toUpperCase()
                   : ''),
             ),
-            title: Text(lastMessage != null
-                ? '${lastMessage['username']}: ${lastMessage['text']}'
-                : 'No messages'),
-            subtitle:
-                Text(lastMessage != null ? '${lastMessage['timestamp']}' : ''),
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    lastMessage != null
+                        ? '${lastMessage['username']}'
+                        : 'No messages',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Text(
+                  lastMessage != null ? '${lastMessage['timestamp']}' : '',
+                ),
+              ],
+            ),
+            subtitle: Text(
+              lastMessage != null ? '${lastMessage['text']}' : '',
+            ),
             onTap: () {
               // Navigate to the chatroom page
               Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatRoomPage(
-                      roomId: roomId,
-                      username: widget.username,
-                    ),
-                  ));
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatRoomPage(
+                    roomId: roomId,
+                    username: widget.username,
+                  ),
+                ),
+              );
             },
           );
         },
@@ -222,7 +239,7 @@ class ChatRoomPageState extends State<ChatRoomPage> {
             }
           }
           // Sort messages in descending order of timestamp
-          messages.sort((a, b) => b['timestamp'].compareTo(a['timestamp']));
+          messages.sort((b, a) => b['timestamp'].compareTo(a['timestamp']));
         });
       } else {
         // handle the case when 'data' is null
@@ -305,25 +322,41 @@ class ChatRoomPageState extends State<ChatRoomPage> {
                         ? message['username'][0].toUpperCase()
                         : ''),
                   ),
-                  title: Text('${message['username']} : ${message['text']}'),
-                  subtitle: Text('${message['timestamp']}'),
+                  title: Text(
+                    '${message['username']}',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('${message['text']}', textAlign: TextAlign.left),
+                      Text('${message['timestamp']}',
+                          textAlign: TextAlign.right),
+                    ],
+                  ),
                 );
               },
             ),
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: messageController,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Message',
-              ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: messageController,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Message',
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.send),
+                  onPressed: _sendMessage,
+                ),
+              ],
             ),
-          ),
-          ElevatedButton(
-            child: const Text('Send'),
-            onPressed: _sendMessage,
           ),
         ],
       ),
