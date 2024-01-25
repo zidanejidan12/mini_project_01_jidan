@@ -146,38 +146,34 @@ class HomePageState extends State<HomePage> {
   }
 
   _createNewRoom(String from, String to) async {
-    try {
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1:8080/api/room'),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'id': widget.roomId,
-          'username': widget.username,
-        }),
-      );
+    final response = await http.post(
+      Uri.parse('http://localhost:8080/api/room'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'from': from,
+        'to': to,
+      }),
+    );
 
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-        if (data['data'] != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ChatRoomPage(
-                roomId: data['data']['roomId'],
-                username: widget.username,
-              ),
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      if (data['data'] != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChatRoomPage(
+              roomId: data['data']['id'],
+              username: widget.username,
             ),
-          );
-        } else {
-          print('Response data is null');
-        }
+          ),
+        );
       } else {
-        print('Failed to create room. Status code: ${response.statusCode}');
+        print('Response data is null');
       }
-    } catch (e) {
-      print('An error occurred: $e');
+    } else {
+      throw Exception('Failed to create room');
     }
   }
 
@@ -187,23 +183,23 @@ class HomePageState extends State<HomePage> {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          final TextEditingController _controller = TextEditingController();
+          final TextEditingController controller = TextEditingController();
           return showDialog(
             context: context,
             builder: (context) {
               return AlertDialog(
-                title: Text('Enter username'),
+                title: const Text('Enter username'),
                 content: TextField(
-                  controller: _controller,
+                  controller: controller,
                 ),
                 actions: <Widget>[
                   TextButton(
-                    child: Text('Send'),
+                    child: const Text('Send'),
                     onPressed: () {
                       Navigator.of(context).pop();
                       _createNewRoom(
                           widget.username,
-                          _controller
+                          controller
                               .text); // ganti 'currentUser' dengan username pengguna saat ini
                     },
                   ),
@@ -212,7 +208,7 @@ class HomePageState extends State<HomePage> {
             },
           );
         },
-        child: Icon(Icons.message),
+        child: const Icon(Icons.message),
       ),
       appBar: AppBar(
         title: const Text('Chat'),
@@ -221,13 +217,16 @@ class HomePageState extends State<HomePage> {
         itemCount: rooms.length,
         itemBuilder: (context, index) {
           String roomId = rooms[index];
-          var lastMessage =
-              roomMessages[roomId] != null && roomMessages[roomId]!.isNotEmpty
-                  ? roomMessages[roomId]![0] // Get the first message
-                  : null;
+          var lastMessage;
+          if (roomMessages[roomId] != null &&
+              roomMessages[roomId]!.isNotEmpty) {
+            lastMessage = roomMessages[roomId]![0];
+          } else {
+            lastMessage = null;
+          }
           return ListTile(
             leading: CircleAvatar(
-              child: Text(lastMessage != null
+              child: Text(lastMessage != null && lastMessage['username'] != null
                   ? lastMessage['username'][0].toUpperCase()
                   : ''),
             ),
@@ -239,7 +238,7 @@ class HomePageState extends State<HomePage> {
                     lastMessage != null
                         ? '${lastMessage['username']}'
                         : 'No messages',
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -335,11 +334,13 @@ class ChatRoomPageState extends State<ChatRoomPage> {
         var data = json.decode(response.body);
         if (data['data'] == true) {
           setState(() {
-            messages.insert(0, {
-              'username': widget.username,
-              'text': messageController.text,
-              'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
-            });
+            if (messages != null) {
+              messages.insert(0, {
+                'username': widget.username,
+                'text': messageController.text,
+                'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
+              });
+            }
             messageController.clear();
           });
         } else {
@@ -354,11 +355,11 @@ class ChatRoomPageState extends State<ChatRoomPage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text('Error'),
-            content: Text('Please enter a message.'),
+            title: const Text('Error'),
+            content: const Text('Please enter a message.'),
             actions: [
               TextButton(
-                child: Text('OK'),
+                child: const Text('OK'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -391,7 +392,7 @@ class ChatRoomPageState extends State<ChatRoomPage> {
                   ),
                   title: Text(
                     '${message['username']}',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -419,7 +420,7 @@ class ChatRoomPageState extends State<ChatRoomPage> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.send),
+                  icon: const Icon(Icons.send),
                   onPressed: _sendMessage,
                 ),
               ],
