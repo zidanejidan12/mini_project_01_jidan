@@ -335,7 +335,7 @@ class ChatRoomPageState extends State<ChatRoomPage> {
         if (data['data'] == true) {
           setState(() {
             if (messages != null) {
-              messages.insert(0, {
+              messages.add({
                 'username': widget.username,
                 'text': messageController.text,
                 'timestamp': DateTime.now().millisecondsSinceEpoch.toString(),
@@ -384,22 +384,55 @@ class ChatRoomPageState extends State<ChatRoomPage> {
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 var message = messages[index];
-                return ListTile(
-                  leading: CircleAvatar(
-                    child: Text(message['username'] != null
-                        ? message['username'][0].toUpperCase()
-                        : ''),
-                  ),
-                  title: Text(
-                    '${message['username']}',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                bool isCurrentUser = message['username'] == widget.username;
+                return Container(
+                  margin: const EdgeInsets.symmetric(
+                      vertical:
+                          5), // Adjust vertical margin to make the box smaller
+                  child: Row(
+                    mainAxisAlignment: isCurrentUser
+                        ? MainAxisAlignment.end
+                        : MainAxisAlignment.start,
                     children: [
-                      Text('${message['text']}', textAlign: TextAlign.left),
-                      Text('${message['timestamp']}',
-                          textAlign: TextAlign.right),
+                      if (!isCurrentUser && message['username'] != null)
+                        CircleAvatar(
+                          child: Text(message['username'][0].toUpperCase()),
+                        ),
+                      SizedBox(
+                          width:
+                              10), // Add a gap between CircleAvatar and message text box
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.all(
+                              8), // Adjust padding to make the box smaller
+                          decoration: BoxDecoration(
+                            color: isCurrentUser
+                                ? Colors.blue[200]
+                                : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                message['username'] ?? 'Unknown',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              Text('${message['text']}'),
+                              Align(
+                                alignment: Alignment.bottomRight,
+                                child: Text('${message['timestamp']}',
+                                    style: TextStyle(fontSize: 10)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (isCurrentUser && message['username'] != null)
+                        CircleAvatar(
+                          child: Text(message['username'][0].toUpperCase()),
+                        ),
                     ],
                   ),
                 );
