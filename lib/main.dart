@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(const ChatApp());
@@ -213,59 +214,73 @@ class HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Chat'),
       ),
-      body: ListView.builder(
-        itemCount: rooms.length,
-        itemBuilder: (context, index) {
-          String roomId = rooms[index];
-          var lastMessage;
-          if (roomMessages[roomId] != null &&
-              roomMessages[roomId]!.isNotEmpty) {
-            lastMessage = roomMessages[roomId]![0];
-          } else {
-            lastMessage = null;
-          }
-          return ListTile(
-            leading: CircleAvatar(
-              child: Text(lastMessage != null && lastMessage['username'] != null
-                  ? lastMessage['username'][0].toUpperCase()
-                  : ''),
-            ),
-            title: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    lastMessage != null
-                        ? '${lastMessage['username']}'
-                        : 'No messages',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+      body: ListView.separated(
+          itemCount: rooms.length,
+          itemBuilder: (context, index) {
+            String roomId = rooms[index];
+            var lastMessage;
+            if (roomMessages[roomId] != null &&
+                roomMessages[roomId]!.isNotEmpty) {
+              lastMessage = roomMessages[roomId]![0];
+            } else {
+              lastMessage = null;
+            }
+            return ListTile(
+              leading: CircleAvatar(
+                child: Text(
+                    lastMessage != null && lastMessage['username'] != null
+                        ? lastMessage['username'][0].toUpperCase()
+                        : ''),
+              ),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      lastMessage != null
+                          ? '${lastMessage['username']}'
+                          : 'No messages',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                Text(
-                  lastMessage != null ? '${lastMessage['timestamp']}' : '',
-                ),
-              ],
-            ),
-            subtitle: Text(
-              lastMessage != null ? '${lastMessage['text']}' : '',
-            ),
-            onTap: () {
-              // Navigate to the chatroom page
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatRoomPage(
-                    roomId: roomId,
-                    username: widget.username,
+                  if (lastMessage !=
+                      null) // Condition to show the unread messages count
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '', // Replace with your dynamic unread count
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                ],
+              ),
+              subtitle: Text(
+                lastMessage != null ? '${lastMessage['text']}' : '',
+              ),
+              onTap: () {
+                // Navigate to the chatroom page
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatRoomPage(
+                      roomId: roomId,
+                      username: widget.username,
+                    ),
                   ),
-                ),
-              );
-            },
-          );
-        },
-      ),
+                );
+              },
+            );
+          },
+          separatorBuilder: (context, index) {
+            return const Divider();
+          }),
     );
   }
 }
@@ -385,55 +400,69 @@ class ChatRoomPageState extends State<ChatRoomPage> {
               itemBuilder: (context, index) {
                 var message = messages[index];
                 bool isCurrentUser = message['username'] == widget.username;
-                return Container(
-                  margin: const EdgeInsets.symmetric(
-                      vertical:
-                          5), // Adjust vertical margin to make the box smaller
-                  child: Row(
-                    mainAxisAlignment: isCurrentUser
-                        ? MainAxisAlignment.end
-                        : MainAxisAlignment.start,
-                    children: [
-                      if (!isCurrentUser && message['username'] != null)
-                        CircleAvatar(
-                          child: Text(message['username'][0].toUpperCase()),
-                        ),
-                      SizedBox(
-                          width:
-                              10), // Add a gap between CircleAvatar and message text box
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.all(
-                              8), // Adjust padding to make the box smaller
-                          decoration: BoxDecoration(
-                            color: isCurrentUser
-                                ? Colors.blue[200]
-                                : Colors.grey[200],
-                            borderRadius: BorderRadius.circular(10),
+                bool isVoiceMessage = message['text'].startsWith(
+                    'Voice message'); // Example condition for voice message
+
+                return Align(
+                  alignment: isCurrentUser
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(
+                        vertical: 4.0, horizontal: 8.0),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 10.0, horizontal: 14.0),
+                    decoration: BoxDecoration(
+                      color: isCurrentUser
+                          ? Colors.lightGreenAccent[400]
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(18.0),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: isCurrentUser
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
+                      children: [
+                        if (!isCurrentUser)
+                          Text(
+                            message['username'] ?? 'Unknown',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black54,
+                            ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                message['username'] ?? 'Unknown',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (isVoiceMessage)
+                              Icon(
+                                Icons.play_arrow,
+                                color: Colors.black54,
                               ),
-                              Text('${message['text']}'),
-                              Align(
-                                alignment: Alignment.bottomRight,
-                                child: Text('${message['timestamp']}',
-                                    style: TextStyle(fontSize: 10)),
+                            Flexible(
+                              child: Text(
+                                message['text'],
+                                style: TextStyle(
+                                  color: isCurrentUser
+                                      ? Colors.white
+                                      : Colors.black87,
+                                ),
                               ),
-                            ],
+                            ),
+                          ],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            DateFormat('h:mm a').format(
+                                DateTime.fromMillisecondsSinceEpoch(
+                                    message['timestamp'] is int
+                                        ? message['timestamp']
+                                        : int.parse(message['timestamp']))),
                           ),
                         ),
-                      ),
-                      if (isCurrentUser && message['username'] != null)
-                        CircleAvatar(
-                          child: Text(message['username'][0].toUpperCase()),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
